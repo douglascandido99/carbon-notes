@@ -1,0 +1,33 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              Int      @id @default(autoincrement())
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  name            String?
+  email           String   @unique
+  hash            String
+  isEmailVerified Boolean  @default(false)
+  notes           Note[]
+
+  @@map("users")
+}
+
+model Note {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  title     String?
+  content   String?
+  User      User?    @relation(fields: [userId], references: [id])
+  userId    Int?
+
+  @@map("notes")
+}
