@@ -6,7 +6,7 @@ import {
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { UsersRepository } from 'src/users/repository/users-repository';
-import { AccessTokenPayload } from '../protocols/interfaces/acess-token-payload.interface';
+import { AccessTokenPayload } from '../protocols/interfaces/access-token-payload.interface';
 import { User } from '@prisma/client';
 
 @Injectable()
