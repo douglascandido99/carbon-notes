@@ -9,7 +9,7 @@ export declare global {
       readonly ACCESS_TOKEN_SECRET: string;
       readonly ACCESS_TOKEN_EXPIRES: string;
       readonly ACCESS_TOKEN_REFRESH: string;
-      readonly ACESS_TOKEN_REFRESH_EXPIRES: string;
+      readonly ACCESS_TOKEN_REFRESH_EXPIRES: string;
       readonly MAIL_VALIDATION_TOKEN_SECRET: string;
       readonly MAIL_VALIDATION_TOKEN_EXPIRES: string;
       readonly MAIL_VALIDATION_URL: string;
