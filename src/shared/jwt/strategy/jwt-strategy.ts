@@ -24,9 +24,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       if (!user) throw new NotFoundException('User not found');
       return user;
     } catch (error) {
-      throw new InternalServerErrorException(
-        'An error ocurred while validating jwt',
-      );
+      throw new InternalServerErrorException('Failed to validate jwt');
     }
   }
 }

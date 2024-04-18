@@ -1,4 +1,5 @@
 import {
+  ForbiddenException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -7,10 +8,12 @@ import {
 import { UsersRepository } from 'src/users/repository/users-repository';
 import { LoginUserDTO } from './dto/login-user.dto';
 import * as argon from 'argon2';
-import { AccessTokenPayload } from './jwt/protocols/interfaces/access-token-payload.interface';
-import { AccessTokenResponse } from './jwt/protocols/interfaces/access-token-response.interface';
-import { JwtRepository } from './jwt/repository/jwt-repository';
+import { AccessTokenPayload } from '../shared/jwt/protocols/interfaces/access-token-payload.interface';
+import { AccessTokenResponse } from '../shared/jwt/protocols/interfaces/access-token-response.interface';
+import { JwtRepository } from '../shared/jwt/repository/jwt-repository';
 import { User } from '@prisma/client';
+import { RefreshTokenPayload } from 'src/shared/jwt/protocols/interfaces/refresh-token-payload.interface';
+import { RefreshTokenResponse } from 'src/shared/jwt/protocols/interfaces/refresh-token-response.interface';
 
 @Injectable()
 export class AuthService {
@@ -32,14 +35,65 @@ export class AuthService {
       case !(await argon.verify(user.hash, password)):
         throw new UnauthorizedException('Wrong credentials');
       default:
+        const accessTokenPayload: AccessTokenPayload = {
+          id: user.id,
+          email: user.email,
+        };
+
         try {
-          const accessTokenPayload: AccessTokenPayload = {
-            id: user.id,
-            email: user.email,
-          };
+          const [accessToken, refreshToken] = await Promise.all([
+            this.jwt.createAccessToken(accessTokenPayload),
+            this.jwt.createRefreshToken(accessTokenPayload),
+          ]);
+
+          const refreshTokenHash: string = await argon.hash(refreshToken);
+
+          await this.user.updateUser(user.id, {
+            refreshToken: refreshTokenHash,
+          });
 
           return {
-            accessToken: await this.jwt.createAccessToken(accessTokenPayload),
+            accessToken: accessToken,
+            refreshToken: refreshToken,
+          };
+        } catch (error) {
+          throw new InternalServerErrorException('Failed to login');
+        }
+    }
+  }
+
+  async refreshToken(
+    id: number,
+    refreshToken: string,
+  ): Promise<RefreshTokenResponse> {
+    const user: User = await this.user.findUserById(id);
+
+    switch (true) {
+      case !user || !user.refreshToken:
+        throw new ForbiddenException('Access denied');
+      case !(await argon.verify(user.refreshToken, refreshToken)):
+        throw new ForbiddenException('Refresh token malformed');
+      default:
+        const refreshTokenPayload: RefreshTokenPayload = {
+          id: user.id,
+          email: user.email,
+        };
+
+        try {
+          const [accessToken, refreshToken] = await Promise.all([
+            this.jwt.createAccessToken(refreshTokenPayload),
+            this.jwt.createRefreshToken(refreshTokenPayload),
+          ]);
+
+          const refreshTokenHash: string = await argon.hash(refreshToken);
+
+          await this.user.updateUser(user.id, {
+            refreshToken: refreshTokenHash,
+          });
+
+          return {
+            accessToken: accessToken,
+            refreshToken: refreshToken,
           };
         } catch (error) {
           throw new InternalServerErrorException('Failed to login');

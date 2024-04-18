@@ -11,9 +11,9 @@ import {
 } from '@nestjs/common';
 import { NotesService } from './notes.service';
 import { CreateNoteDTO } from './dto/create-note.dto';
-import { GetUser } from 'src/auth/decorators/get-user-decorator';
+import { GetUser } from 'src/shared/decorators/get-user-decorator';
 import { UpdateNoteDTO } from './dto/update-note.dto';
-import { JwtAuthGuard } from 'src/auth/jwt/guards/jwt-auth-guard';
+import { JwtAuthGuard } from 'src/shared/jwt/guards/jwt-auth-guard';
 import { Note } from '@prisma/client';
 
 @UseGuards(JwtAuthGuard)

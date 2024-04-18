@@ -1,6 +1,7 @@
 import {
   IsEmail,
   IsNotEmpty,
+  IsOptional,
   IsString,
   IsStrongPassword,
   Length,
@@ -21,4 +22,8 @@ export class CreateUserDTO {
   @IsStrongPassword()
   @Length(8, 64)
   readonly password: string;
+
+  @IsString()
+  @IsOptional()
+  readonly refreshToken?: string;
 }
