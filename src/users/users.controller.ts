@@ -1,7 +1,7 @@
 import {
   Body,
   Controller,
-  Param,
+  Delete,
   ParseIntPipe,
   Patch,
   Post,
@@ -14,6 +14,7 @@ import { UpdateUserDTO } from './dto/update-user.dto';
 import { UpdateEmailDTO } from './dto/update-email.dto';
 import { JwtAuthGuard } from 'src/shared/jwt/guards/jwt-auth-guard';
 import { GetUser } from 'src/shared/decorators/get-user-decorator';
+import { UpdatePasswordDTO } from './dto/update-password.dto';
 
 @Controller('users')
 export class UsersController {
@@ -24,16 +25,28 @@ export class UsersController {
 
   @Post('create')
   async createUser(@Body() userDto: CreateUserDTO): Promise<void> {
-    await this.usersService.createUser(userDto);
-    await this.mail.sendEmailValidationLink(userDto.email);
+    await Promise.all([
+      this.usersService.createUser(userDto),
+      this.mail.sendEmailValidationLink(userDto.email),
+    ]);
   }
 
-  @Patch('update')
+  @UseGuards(JwtAuthGuard)
+  @Patch('update-user')
   async updateUser(
-    @Param('id', ParseIntPipe) id: number,
+    @GetUser('id', ParseIntPipe) id: number,
     @Body() userDto: UpdateUserDTO,
   ): Promise<void> {
     return await this.usersService.updateUser(id, userDto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('update-password')
+  async updatePassword(
+    @GetUser('id', ParseIntPipe) id: number,
+    @Body() userDto: UpdatePasswordDTO,
+  ) {
+    return await this.usersService.updatePassword(id, userDto);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -44,9 +57,13 @@ export class UsersController {
   ): Promise<void> {
     await Promise.all([
       this.usersService.initiateEmailChange(id, userDto),
-      this.mail.sendChangeEmailValidationLink(userDto.pendingEmail),
+      this.mail.sendUpdateEmailValidationLink(userDto.pendingEmail),
     ]);
   }
 
-  async deleteUser() {}
+  @UseGuards(JwtAuthGuard)
+  @Delete('delete')
+  async deleteUser(@GetUser('id', ParseIntPipe) id: number): Promise<void> {
+    return await this.usersService.deleteUser(id);
+  }
 }

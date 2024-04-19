@@ -7,7 +7,7 @@ export class MailController {
   constructor(private readonly mailService: MailService) {}
 
   @Post('confirm')
-  async confirm(@Body() emailDto: ConfirmEmailDTO): Promise<void> {
+  async confirmEmail(@Body() emailDto: ConfirmEmailDTO): Promise<void> {
     const email: any = await this.mailService.decodeEmailConfirmationToken(
       emailDto.token,
     );
@@ -15,9 +15,9 @@ export class MailController {
   }
 
   @Post('change')
-  async changeEmail(@Body() emailDto: ConfirmEmailDTO): Promise<void> {
+  async confirmEmailUpdate(@Body() emailDto: ConfirmEmailDTO): Promise<void> {
     const email: any =
-      await this.mailService.decodeEmailChangeConfirmationToken(emailDto.token);
-    await this.mailService.confirmEmailChange(email);
+      await this.mailService.decodeEmailUpdateConfirmationToken(emailDto.token);
+    await this.mailService.confirmEmailUpdate(email);
   }
 }

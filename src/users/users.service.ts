@@ -12,12 +12,13 @@ import * as argon from 'argon2';
 import { User } from '@prisma/client';
 import { UpdateUserDTO } from './dto/update-user.dto';
 import { UpdateEmailDTO } from './dto/update-email.dto';
+import { UpdatePasswordDTO } from './dto/update-password.dto';
 
 @Injectable()
 export class UsersService {
   constructor(private readonly user: UsersRepository) {}
 
-  async createUser(userDto: CreateUserDTO) {
+  async createUser(userDto: CreateUserDTO): Promise<void> {
     const { name, email, password } = userDto;
 
     const existentUser: User = await this.user.findUserByEmail(email);
@@ -37,6 +38,18 @@ export class UsersService {
   async updateUser(id: number, userDto: UpdateUserDTO): Promise<void> {
     const user: User = await this.user.findUserById(id);
 
+    if (!user || user.id !== id) throw new NotFoundException('User not found');
+
+    try {
+      await this.user.updateUser(id, { ...userDto });
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to update user name');
+    }
+  }
+
+  async updatePassword(id: number, userDto: UpdatePasswordDTO): Promise<void> {
+    const user: User = await this.user.findUserById(id);
+
     switch (true) {
       case !user || user.id !== id:
         throw new NotFoundException('User not found');
@@ -49,9 +62,11 @@ export class UsersService {
       default:
         try {
           const hash: string = await argon.hash(userDto.newPassword);
-          await this.user.updateUser(id, { ...userDto, hash });
+          await this.user.updateUser(id, { hash });
         } catch (error) {
-          throw new InternalServerErrorException('Failed to update user');
+          throw new InternalServerErrorException(
+            'Failed to update user password',
+          );
         }
     }
   }
@@ -63,11 +78,11 @@ export class UsersService {
     const user: User = await this.user.findUserById(id);
 
     switch (true) {
-      case !user:
+      case !user || user.id !== id:
         throw new NotFoundException('User not found');
       case user.email === userDto.pendingEmail:
         throw new BadRequestException(
-          `Bro... ${userDto.pendingEmail} is already your current e-mail`,
+          `${userDto.pendingEmail} is already your current e-mail`,
         );
       default:
         try {
@@ -80,5 +95,15 @@ export class UsersService {
     }
   }
 
-  async deleteUser() {}
+  async deleteUser(id: number) {
+    const user: User = await this.user.findUserById(id);
+
+    if (!user || user.id !== id) throw new NotFoundException('User not found');
+
+    try {
+      await this.user.deleteUser(id);
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to delete user');
+    }
+  }
 }

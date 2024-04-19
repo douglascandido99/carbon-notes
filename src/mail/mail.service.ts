@@ -9,7 +9,7 @@ import { JwtService } from '@nestjs/jwt';
 import { EmailValidationTokenPayload } from './protocols/interfaces/email-validation-token-payload.interface';
 import { UsersRepository } from 'src/users/repository/users-repository';
 import { User } from '@prisma/client';
-import { EmailChangeValidationTokenPayload } from './protocols/interfaces/email-change-validation-token-payload.interface';
+import { EmailUpdateValidationTokenPayload } from './protocols/interfaces/email-update-validation-token-payload.interface';
 
 @Injectable()
 export class MailService {
@@ -44,8 +44,8 @@ export class MailService {
     }
   }
 
-  async sendChangeEmailValidationLink(pendingEmail: string): Promise<void> {
-    const payload: EmailChangeValidationTokenPayload = { pendingEmail };
+  async sendUpdateEmailValidationLink(pendingEmail: string): Promise<void> {
+    const payload: EmailUpdateValidationTokenPayload = { pendingEmail };
 
     try {
       const token: string = this.jwt.sign(payload, {
@@ -64,7 +64,7 @@ export class MailService {
       });
     } catch (error) {
       throw new InternalServerErrorException(
-        'Failed to send e-mail validation link',
+        'Failed to send e-mail update validation link',
       );
     }
   }
@@ -80,7 +80,7 @@ export class MailService {
     });
   }
 
-  async confirmEmailChange(pendingEmail: string): Promise<void> {
+  async confirmEmailUpdate(pendingEmail: string): Promise<void> {
     const user: User = await this.user.findUserByPendingEmail(pendingEmail);
 
     switch (true) {
@@ -115,7 +115,7 @@ export class MailService {
     }
   }
 
-  async decodeEmailChangeConfirmationToken(token: string): Promise<any> {
+  async decodeEmailUpdateConfirmationToken(token: string): Promise<any> {
     try {
       const payload: any = await this.jwt.verify(token, {
         secret: process.env.MAIL_VALIDATION_TOKEN_SECRET,
