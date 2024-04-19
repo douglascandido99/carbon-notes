@@ -1,10 +1,17 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  ParseIntPipe,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginUserDTO } from './dto/login-user.dto';
 import { AccessTokenResponse } from '../shared/jwt/protocols/interfaces/access-token-response.interface';
-import { Request } from 'express';
 import { JwtRefreshGuard } from 'src/shared/jwt/guards/jwt-refresh-auth-guard';
 import { RefreshTokenResponse } from 'src/shared/jwt/protocols/interfaces/refresh-token-response.interface';
+import { GetUser } from 'src/shared/decorators/get-user-decorator';
+import { RefreshTokenDTO } from './dto/refresh-token.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -16,10 +23,11 @@ export class AuthController {
   }
 
   @UseGuards(JwtRefreshGuard)
-  @Get('refresh-token')
-  async refreshToken(@Req() req: Request): Promise<RefreshTokenResponse> {
-    const id: number = req.user['id'];
-    const refreshToken: string = req.user['refreshToken'];
-    return await this.authService.refreshToken(id, refreshToken);
+  @Post('refresh-token')
+  async refreshToken(
+    @GetUser('id', ParseIntPipe) id: number,
+    token: RefreshTokenDTO,
+  ): Promise<RefreshTokenResponse> {
+    return await this.authService.refreshToken(id, token);
   }
 }

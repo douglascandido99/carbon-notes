@@ -14,6 +14,7 @@ import { JwtRepository } from '../shared/jwt/repository/jwt-repository';
 import { User } from '@prisma/client';
 import { RefreshTokenPayload } from 'src/shared/jwt/protocols/interfaces/refresh-token-payload.interface';
 import { RefreshTokenResponse } from 'src/shared/jwt/protocols/interfaces/refresh-token-response.interface';
+import { RefreshTokenDTO } from './dto/refresh-token.dto';
 
 @Injectable()
 export class AuthService {
@@ -64,14 +65,14 @@ export class AuthService {
 
   async refreshToken(
     id: number,
-    refreshToken: string,
+    token: RefreshTokenDTO,
   ): Promise<RefreshTokenResponse> {
     const user: User = await this.user.findUserById(id);
 
     switch (true) {
       case !user || !user.refreshToken:
         throw new ForbiddenException('Access denied');
-      case !(await argon.verify(user.refreshToken, refreshToken)):
+      case !(await argon.verify(user.refreshToken, token.refreshToken)):
         throw new ForbiddenException('Refresh token malformed');
       default:
         const refreshTokenPayload: RefreshTokenPayload = {
@@ -96,7 +97,7 @@ export class AuthService {
             refreshToken: refreshToken,
           };
         } catch (error) {
-          throw new InternalServerErrorException('Failed to login');
+          throw new InternalServerErrorException('Failed to refresh token');
         }
     }
   }
