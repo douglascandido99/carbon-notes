@@ -13,4 +13,11 @@ export class MailController {
     );
     await this.mailService.confirmEmail(email);
   }
+
+  @Post('change')
+  async changeEmail(@Body() emailDto: ConfirmEmailDTO): Promise<void> {
+    const email: any =
+      await this.mailService.decodeEmailChangeConfirmationToken(emailDto.token);
+    await this.mailService.confirmEmailChange(email);
+  }
 }

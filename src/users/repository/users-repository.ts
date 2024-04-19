@@ -28,6 +28,14 @@ export class UsersRepository {
     });
   }
 
+  async findUserByPendingEmail(pendingEmail: string): Promise<User> {
+    return await this.prisma.user.findFirst({
+      where: {
+        pendingEmail,
+      },
+    });
+  }
+
   async updateUser(id: number, data: Prisma.UserUpdateInput): Promise<void> {
     await this.prisma.user.update({
       where: {

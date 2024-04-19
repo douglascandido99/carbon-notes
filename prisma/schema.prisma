@@ -8,15 +8,17 @@ datasource db {
 }
 
 model User {
-  id              Int      @id @default(autoincrement())
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
-  name            String?
-  email           String   @unique
-  hash            String
-  refreshToken    String?
-  isEmailVerified Boolean  @default(false)
-  notes           Note[]
+  id                     Int      @id @default(autoincrement())
+  createdAt              DateTime @default(now()) @map("created_at")
+  updatedAt              DateTime @updatedAt @map("updated_at")
+  name                   String?
+  email                  String   @unique
+  pendingEmail           String?  @unique @map("pending_email")
+  hash                   String
+  refreshToken           String?  @map("refresh_token")
+  isEmailVerified        Boolean  @default(false) @map("is_email_verified")
+  isPendingEmailVerified Boolean  @default(false) @map("is_pending_email_verified")
+  notes                  Note[]
 
   @@map("users")
 }
@@ -28,7 +30,7 @@ model Note {
   title     String?
   content   String?
   User      User?    @relation(fields: [userId], references: [id])
-  userId    Int?
+  userId    Int?     @map("user_id")
 
   @@map("notes")
 }
