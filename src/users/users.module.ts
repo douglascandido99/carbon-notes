@@ -3,7 +3,7 @@ import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { PrismaModule } from 'src/shared/prisma/prisma.module';
 import { UsersRepository } from './repository/users-repository';
-import { MailService } from 'src/mail/mail.service';
+import { MailService } from 'src/shared/mail/mail.service';
 import { JwtService } from '@nestjs/jwt';
 
 @Module({

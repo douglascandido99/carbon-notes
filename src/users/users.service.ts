@@ -71,7 +71,7 @@ export class UsersService {
     }
   }
 
-  async initiateEmailChange(
+  async initiateEmailUpdate(
     id: number,
     userDto: UpdateEmailDTO,
   ): Promise<void> {

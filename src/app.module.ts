@@ -4,7 +4,7 @@ import { AuthModule } from './auth/auth.module';
 import { NotesModule } from './notes/notes.module';
 import { PrismaModule } from './shared/prisma/prisma.module';
 import { MailerModule } from '@nestjs-modules/mailer';
-import { MailModule } from './mail/mail.module';
+import { MailModule } from './shared/mail/mail.module';
 
 @Module({
   imports: [

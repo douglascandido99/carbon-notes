@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   InternalServerErrorException,
@@ -15,12 +16,14 @@ import { User } from '@prisma/client';
 import { RefreshTokenPayload } from 'src/shared/jwt/protocols/interfaces/refresh-token-payload.interface';
 import { RefreshTokenResponse } from 'src/shared/jwt/protocols/interfaces/refresh-token-response.interface';
 import { RefreshTokenDTO } from './dto/refresh-token.dto';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly user: UsersRepository,
     private readonly jwt: JwtRepository,
+    private readonly jwtService: JwtService,
   ) {}
 
   async loginUser(userDto: LoginUserDTO): Promise<AccessTokenResponse> {
@@ -60,6 +63,100 @@ export class AuthService {
         } catch (error) {
           throw new InternalServerErrorException('Failed to login');
         }
+    }
+  }
+
+  async resetPassword(email: string, password: string): Promise<void> {
+    const user: User = await this.user.findUserByEmail(email);
+
+    if (!user) throw new NotFoundException('User not found');
+
+    try {
+      const hash: string = await argon.hash(password);
+      await this.user.updateUser(user.id, { hash });
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to reset password');
+    }
+  }
+
+  async confirmEmail(email: string): Promise<void> {
+    const user: User = await this.user.findUserByEmail(email);
+
+    if (user.isEmailVerified)
+      throw new BadRequestException('E-mail already confirmed');
+
+    await this.user.updateUser(user.id, {
+      isEmailVerified: true,
+    });
+  }
+
+  async confirmEmailUpdate(pendingEmail: string): Promise<void> {
+    const user: User = await this.user.findUserByPendingEmail(pendingEmail);
+
+    if (!user) throw new NotFoundException('User not found');
+
+    try {
+      await this.user.updateUser(user.id, {
+        email: user.pendingEmail,
+        pendingEmail: null,
+        isEmailVerified: true,
+      });
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to confirm e-mail update');
+    }
+  }
+
+  async decodeEmailConfirmationToken(token: string): Promise<any> {
+    try {
+      const payload: any = await this.jwtService.verify(token, {
+        secret: process.env.EMAIL_VALIDATION_TOKEN_SECRET,
+      });
+
+      if (typeof payload === 'object' && 'email' in payload) {
+        return payload.email;
+      }
+      throw new BadRequestException();
+    } catch (error) {
+      if (error?.name === 'TokenExpiredError') {
+        throw new BadRequestException('E-mail confirmation token expired');
+      }
+      throw new BadRequestException('Bad e-mail confirmation token');
+    }
+  }
+
+  async decodeEmailUpdateConfirmationToken(token: string): Promise<any> {
+    try {
+      const payload: any = await this.jwtService.verify(token, {
+        secret: process.env.EMAIL_UPDATE_TOKEN_SECRET,
+      });
+
+      if (typeof payload === 'object' && 'pendingEmail' in payload) {
+        return payload.pendingEmail;
+      }
+      throw new BadRequestException();
+    } catch (error) {
+      if (error?.name === 'TokenExpiredError') {
+        throw new BadRequestException('E-mail confirmation token expired');
+      }
+      throw new BadRequestException('Bad e-mail confirmation token');
+    }
+  }
+
+  async decodeResetPasswordToken(token: string): Promise<any> {
+    try {
+      const payload: any = await this.jwtService.verify(token, {
+        secret: process.env.EMAIL_RESET_PASSWORD_TOKEN_SECRET,
+      });
+
+      if (typeof payload === 'object' && 'email' in payload) {
+        return payload.email;
+      }
+      throw new BadRequestException();
+    } catch (error) {
+      if (error?.name === 'TokenExpiredError') {
+        throw new BadRequestException('Reset password token expired');
+      }
+      throw new BadRequestException('Bad reset password token');
     }
   }
 

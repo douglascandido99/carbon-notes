@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDTO } from './dto/create-user.dto';
-import { MailService } from 'src/mail/mail.service';
+import { MailService } from 'src/shared/mail/mail.service';
 import { UpdateUserDTO } from './dto/update-user.dto';
 import { UpdateEmailDTO } from './dto/update-email.dto';
 import { JwtAuthGuard } from 'src/shared/jwt/guards/jwt-auth-guard';
@@ -45,18 +45,18 @@ export class UsersController {
   async updatePassword(
     @GetUser('id', ParseIntPipe) id: number,
     @Body() userDto: UpdatePasswordDTO,
-  ) {
+  ): Promise<void> {
     return await this.usersService.updatePassword(id, userDto);
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post('update-email')
-  async updateEmail(
+  @Post('request-email-update')
+  async requestEmailUpdate(
     @GetUser('id', ParseIntPipe) id: number,
     @Body() userDto: UpdateEmailDTO,
   ): Promise<void> {
     await Promise.all([
-      this.usersService.initiateEmailChange(id, userDto),
+      this.usersService.initiateEmailUpdate(id, userDto),
       this.mail.sendUpdateEmailValidationLink(userDto.pendingEmail),
     ]);
   }

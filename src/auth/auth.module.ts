@@ -7,6 +7,7 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaModule } from 'src/shared/prisma/prisma.module';
 import { JwtStrategy } from '../shared/jwt/strategy/jwt-strategy';
 import { JwtRefreshStrategy } from 'src/shared/jwt/strategy/jwt-refresh-strategy';
+import { MailService } from 'src/shared/mail/mail.service';
 
 @Module({
   imports: [PrismaModule],
@@ -18,6 +19,7 @@ import { JwtRefreshStrategy } from 'src/shared/jwt/strategy/jwt-refresh-strategy
     JwtStrategy,
     JwtRefreshStrategy,
     UsersRepository,
+    MailService,
   ],
 })
 export class AuthModule {}
