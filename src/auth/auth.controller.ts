@@ -32,7 +32,7 @@ export class AuthController {
     return await this.authService.loginUser(userDto);
   }
 
-  @Post('request-reset-password')
+  @Post('forgot-password')
   async requestResetPasswordLink(
     @Body() userDto: ResetPasswordDTO,
   ): Promise<void> {
