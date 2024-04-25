@@ -66,7 +66,7 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Post('resend-email')
-  async resendEmailUpdateLink(@Body() userDto: UpdateEmailDTO) {
+  async resendEmailUpdateLink(@Body() userDto: UpdateEmailDTO): Promise<void> {
     if (!(await this.user.findUserByPendingEmail(userDto.pendingEmail)))
       throw new NotFoundException('User not found');
     await this.mail.sendUpdateEmailValidationLink(userDto.pendingEmail);
