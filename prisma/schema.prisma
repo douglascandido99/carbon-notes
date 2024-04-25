@@ -28,7 +28,7 @@ model Note {
   updatedAt DateTime @updatedAt @map("updated_at")
   title     String?
   content   String?
-  User      User?    @relation(fields: [userId], references: [id])
+  User      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    Int?     @map("user_id")
 
   @@map("notes")

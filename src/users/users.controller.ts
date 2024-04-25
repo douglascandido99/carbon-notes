@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  NotFoundException,
   ParseIntPipe,
   Patch,
   Post,
@@ -15,12 +16,14 @@ import { UpdateEmailDTO } from './dto/update-email.dto';
 import { JwtAuthGuard } from 'src/shared/jwt/guards/jwt-auth-guard';
 import { GetUser } from 'src/shared/decorators/get-user-decorator';
 import { UpdatePasswordDTO } from './dto/update-password.dto';
+import { UsersRepository } from './repository/users-repository';
 
 @Controller('users')
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,
     private readonly mail: MailService,
+    private readonly user: UsersRepository,
   ) {}
 
   @Post('create')
@@ -59,6 +62,14 @@ export class UsersController {
       this.usersService.initiateEmailUpdate(id, userDto),
       this.mail.sendUpdateEmailValidationLink(userDto.pendingEmail),
     ]);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('resend-email')
+  async resendEmailUpdateLink(@Body() userDto: UpdateEmailDTO) {
+    if (!(await this.user.findUserByPendingEmail(userDto.pendingEmail)))
+      throw new NotFoundException('User not found');
+    await this.mail.sendUpdateEmailValidationLink(userDto.pendingEmail);
   }
 
   @UseGuards(JwtAuthGuard)

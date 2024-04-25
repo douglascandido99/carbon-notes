@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   NotFoundException,
@@ -18,6 +19,7 @@ import { ResetPasswordDTO } from 'src/auth/dto/reset-password.dto';
 import { MailService } from 'src/shared/mail/mail.service';
 import { UsersRepository } from 'src/users/repository/users-repository';
 import { ChangePasswordDTO } from './dto/change-password.dto';
+import { User } from '@prisma/client';
 
 @Controller('auth')
 export class AuthController {
@@ -62,6 +64,22 @@ export class AuthController {
     const email: any =
       await this.authService.decodeEmailUpdateConfirmationToken(emailDto.token);
     await this.authService.confirmEmailUpdate(email);
+  }
+
+  @Post('resend-email')
+  async resendEmailConfirmationLink(
+    @Body() userDto: Partial<LoginUserDTO>,
+  ): Promise<void> {
+    const user: User = await this.user.findUserByEmail(userDto.email);
+
+    switch (true) {
+      case !user:
+        throw new NotFoundException('User not found');
+      case user.isEmailVerified:
+        throw new BadRequestException('Your e-mail is already confirmed');
+      default:
+        await this.mailService.sendEmailValidationLink(userDto.email);
+    }
   }
 
   @UseGuards(JwtRefreshGuard)
